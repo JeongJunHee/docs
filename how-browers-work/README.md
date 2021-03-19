@@ -276,9 +276,9 @@ HTML 페이지에서 `유효하지 않은 구문` 이라는 오류를 본 적이
 
 웹킷이 오류를 처리하는 예는 다음과 같다.
 
-#### <br> 대신 </br>
+#### \<br\> 대신 \</br\>
 
-어떤 사이트는 <br> 대신 </br>을 사용한다. 인터넷 익스플로러, 파이어폭스와 호환성을 갖기 위해 웹킷은 이것을 <br> 으로 간주한다. 코드는 다음과 같다.
+어떤 사이트는 \<br\> 대신 \</br\>을 사용한다. 인터넷 익스플로러, 파이어폭스와 호환성을 갖기 위해 웹킷은 이것을 <br> 으로 간주한다. 코드는 다음과 같다.
 
 ```c++
 if(t->isCloseTag(brTag) && m_document->inCompatMode()) {  
@@ -322,5 +322,5 @@ popBlock(tableTag);
 
 # References
 
-[How Browsers Work: Behind the scenes of modern web browsers](https://www.html5rocks.com/en/tutorials/internals/howbrowserswork/)
+[How Browsers Work: Behind the scenes of modern web browsers](https://www.html5rocks.com/en/tutorials/internals/howbrowserswork/)  
 [브라우저는 어떻게 동작하는가? - Naver D2](https://d2.naver.com/helloworld/59361)
