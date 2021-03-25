@@ -99,5 +99,7 @@ Chrome이 렌더러 프로세스를 여러 개 사용한다. 가장 간단한 �
 
 ![](./images/isolation.png)
 
-[Inside look at modern web browser (part 1)](https://developers.google.com/web/updates/2018/09/inside-browser-part1#%ED%94%84%EB%A1%9C%EC%8A%A4%EC%84%B8%EC%99%80_%EC%8A%A4%EB%A0%88%EB%93%9C%EC%97%90%EC%84%9C_%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8_%EC%8B%A4%ED%96%89)
+# References
+
+[Inside look at modern web browser (part 1)](https://developers.google.com/web/updates/2018/09/inside-browser-part1#%ED%94%84%EB%A1%9C%EC%8A%A4%EC%84%B8%EC%99%80_%EC%8A%A4%EB%A0%88%EB%93%9C%EC%97%90%EC%84%9C_%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8_%EC%8B%A4%ED%96%89)  
 [최신 브라우저의 내부 살펴보기 1 - CPU, GPU, 메모리 그리고 다중 프로세스 아키텍처](https://d2.naver.com/helloworld/2922312)
