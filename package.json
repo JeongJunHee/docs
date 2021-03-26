@@ -1,6 +1,6 @@
 {
-  "homepage": "https://jeongjunhee.github.io/docs/",
-  "name": "docs",
+  "homepage": "https://jeongjunhee.github.io/documents/",
+  "name": "documents",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
@@ -8,7 +8,7 @@
     "name": "",
     "email": ""
   },
-  "repository": "/docs",
+  "repository": "/documents",
   "scripts": {
     "dev": "vuepress dev docs",
     "build": "vuepress build docs"
