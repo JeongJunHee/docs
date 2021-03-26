@@ -1,8 +1,6 @@
 
 # 브라우저는 어떻게 동작하는가?
 
-[toc]
-
 ## 소개
 
 ### 브라우저의 주요 기능
@@ -23,9 +21,7 @@
 
 #### 브라우저의 주요 구성 요소
 
-<p align="center">
-  <img src="./images/browser-components.png"/>
-</p>
+![](./images/browser-components.png)
 
 1. 사용자 인터 페이스
     - 주소 표시줄, 이전/다음 버튼, 북마크 메뉴 등 요청한 페이지를 보여주는 창을 제외한 나머지 모든 부분이다.
@@ -63,9 +59,7 @@
 
 렌더링 엔진은 통신으로부터 요청한 문서의 내용을 얻는 것으로 시작하는데 문서의 내용은 보통 8KB 단위로 전송된다.
 
-<p align="center">
-  <img src="./images/rendering-engine-basic-flow.png"/>
-</p>
+![](./images/rendering-engine-basic-flow.png)
 
 1. HTML 문서를 파싱하고 `콘텐츠 트리` 내부에서 태그를 DOM 노드로 변환한다. 
 2. 외부 CSS 파일과 함께 포함된 스타일 요소도 파싱한다. 스타일 정보와 HTML 표시 규칙은 `렌더 트리` 라고 부르는 또 다른 트리를 생성한다.
@@ -74,13 +68,9 @@
 
 렌더링 엔진은 좀 더 나은 사용자 경험을 위해 가능하면 빠르게 내용을 표시하는데 모든 HTML을 파싱할 때까지 기다리지 않고 배치와 그리기 과정을 시작한다. 네트워크로부터 나머지 내용이 전송되기를 기다리는 동시에 받은 내용의 일부를 먼저 화면에 표시하는 것이다.
 
-<p align="center">
-  <img src="./images/webkit-main-flow.png"/>
-</p>
+![](./images/webkit-main-flow.png)
 
-<p align="center">
-  <img src="./images/gecko-main-flow.png"/>
-</p>
+![](./images/gecko-main-flow.png)
 
 게코는 시각적으로 처리되는 렌더 트리를 `형상 트리(frame tree)` 라고 부르고 각 요소를 형상(frame)이라고 하는데 웹킷은 `렌더 객체(render object)` 로 구성되어 있는 `렌더 트리(render tree)` 라는 용어를 사용한다. 웹킷은 요소를 배치하는데 `배치(layout)` 라는 용어를 사용하지만 게코는 `리플로(reflow)` 라고 부른다. `어태치먼트(attachment)` 는 웹킷이 렌더 트리를 생성하기 위해 DOM 노드와 시각 정보를 연결하는 과정이다. 게코는 HTML과 DOM 트리 사이에 `콘텐츠 싱크(content sink)` 라고 부르는 과정을 두는데 이는 DOM 요소를 생성하는 공정으로 웹킷과 비교하여 의미있는 차이점이라고 보지는 않는다.
 
@@ -104,9 +94,7 @@
 
 파서는 보통 두 가지 일을 하는데 자료를 유효한 토큰으로 분해하는 어휘 분석기(토큰 변환기)가 있고 언어 구문 규칙에 따라 문서 구조를 분석함으로써 파싱 트리를 생성하는 파서가 있다. 어휘 분석기는 공백과 줄 바꿈 같은 의미 없는 문자를 제거한다.
 
-<p align="center">
-  <img src="./images/parse-trees.png"/>
-</p>
+![](./images/parse-trees.png)
 
 파싱 과정은 반복된다. 파서는 보통 어휘 분석기로부터 새 토큰을 받아서 구문 규칙과 일치하는지 확인한다. 규칙에 맞으면 토큰에 해당하는 노드가 파싱 트리에 추가되고 파서는 또 다른 토큰을 요청한다.
 
@@ -116,9 +104,7 @@
 
 파서 트리는 최종 결과물이 아니다. 파싱은 보통 문서를 다른 양식으로 변환하는데 컴파일이 하나의 예가 된다. 소스 코드를 기계 코드로 만드는 컴파일러는 파싱 트리 생성 후 이를 기계 코드 문서로 변환한다.
 
-<p align="center">
-  <img src="./images/compilation-flow.png"/>
-</p>
+![](./images/compilation-flow.png)
 
 #### 어휘와 구문에 대한 공식적인 정의
 
@@ -201,9 +187,7 @@ DOM 은 마크업과 1:1의 관계를 맺는다.
 
 이것은 아래와 같은 DOM 트리로 변환할 수 있다.
 
-<p align="center">
-  <img src="./images/dom-tree.png"/>
-</p>
+![](./images/dom-tree.png)
 
 HTML과 마찬가지로 DOM은 W3C에 의해 명세가 정해져 있다. 이것은 문서를 다루기 위한 일반적인 명세인데 부분적으로 HTML 요소를 설명하기도 한다.
 
@@ -225,9 +209,7 @@ HTML은 다음과 같은 이유로 일반적인 하향식 또는 상향식 파�
 
 토큰화는 토큰을 인지해서 트리 생성자로 넘기고 다음 토큰을 확인하기 위해 다음 문자를 확인한다. 입력의 마지막까지 이 과정을 반복한다.
 
-<p align="center">
-  <img src="./images/html-parsing-flow.png"/>
-</p>
+![](./images/html-parsing-flow.png)
 
 #### 토큰화 알고리즘
 
@@ -247,9 +229,7 @@ HTML은 다음과 같은 이유로 일반적인 하향식 또는 상향식 파�
 
 다시 `태그 열림 상태` 가 되었다. `/` 문자는 종료 태그 토큰을 생성하고 `태그 이름 상태` 로 변경 될 것이다. 이 상태는 `>` 문자를 만날 때까지 유지된다. 그리고 새로운 태그 토큰이 발행되고 다시 `자료 상태` 가 된다.
 
-<p align="center">
-  <img src="./images/tokenizing.png"/>
-</p>
+![](./images/tokenizing.png)
 
 #### 트리 구축 알고리즘
 
@@ -273,9 +253,7 @@ HTML은 다음과 같은 이유로 일반적인 하향식 또는 상향식 파�
 
 body 종료 토큰을 받으면 `body 다음` 모드가 된다. html 종료 태그를 만나면 `body 다음 다음` 모드로 바뀐다. 마지막 파일 토큰을 받으면 파싱을 종료한다.
 
-<p align="center">
-  <img src="./images/tree-construction.png"/>
-</p>
+![](./images/tree-construction.png)
 
 #### 파싱이 끝난 이후의 동작
 
@@ -313,7 +291,7 @@ HTML 페이지에서 `유효하지 않은 구문` 이라는 오류를 본 적이
 
 어떤 사이트는 \<br\> 대신 \</br\>을 사용한다. 인터넷 익스플로러, 파이어폭스와 호환성을 갖기 위해 웹킷은 이것을 \<br\> 으로 간주한다. 코드는 다음과 같다.
 
-```c++
+```cpp
 if (t->isCloseTag(brTag) && m_document->inCompatMode()) {
   reportError(MalformedBRError);
   t->beginTag = true;
@@ -348,7 +326,7 @@ if (t->isCloseTag(brTag) && m_document->inCompatMode()) {
 
 코드는 다음과 같다.
 
-```c++
+```cpp
 if (m_inStrayTableContent && localName == tableTag)
   popBlock(tableTag);
 ```
@@ -359,7 +337,7 @@ if (m_inStrayTableContent && localName == tableTag)
 
 폼 안에 또 다른 폼을 넣은 경우 안쪽의 폼은 무시된다.
 
-```c++
+```cpp
 if (!m_currentFormElement) {
   m_currentFormElement = new HTMLFormElement(formTag, m_document);
 }
@@ -369,7 +347,7 @@ if (!m_currentFormElement) {
 
 www.liceo.edu.mx 사이트는 약 1,500개 수준의 태그 중첩이 되어 있는 예제인데 모든 요소가 \<b\>로 되어 있다. 최대 20개의 중첩만 허용하고 나머지는 무시한다.
 
-```c++
+```cpp
 bool HTMLParser::allowNestedRedundantTag(const AtomicString& tagName) {
   unsigned i = 0;
   for (HTMLStackElem* curr = m_blockStack; i < cMaxRedundantTagDepth && curr && curr->tagName == tagName; curr = curr->next, i++) { }
@@ -381,7 +359,7 @@ bool HTMLParser::allowNestedRedundantTag(const AtomicString& tagName) {
 
 깨진 html을 지원한다. 일부 바보 같은 페이지는 문서가 끝나기 전에 body를 닫아버리기 때문에 브라우저는 body 태그를 닫지 않는다. 대신 종료를 위해 end()를 호출한다.
 
-```c++
+```cpp
 if (t->tagName == htmlTag || t->tagName == bodyTag)
   return;
 ```
@@ -455,9 +433,7 @@ Ruleset
 
 웹킷은 CSS 문법 파일로부터 자동으로 파서를 생성하기 위해 플렉스와 바이슨 파서 생성기를 사용한다. 바이슨은 상향식 이동 감소 파서를 생성한다. 파이어폭스는 직접 작성한 하향식 파서를 사용한다. 두 경우 모두 각 CSS 파일은 스타일 시트 객체로 파싱되고 각 객체는 CSS 규칙을 포함한다. CSS 규칙 객체는 선택자와 선언 객체 그리고 CSS 문법과 일치하는 다른 객체를 포함한다.
 
-<p align="center">
-  <img src="./images/parsing-css.png"/>
-</p>
+![](./images/parsing-css.png)
 
 ### 스크립트와 스타일 시트의 진행 순서
 
@@ -483,7 +459,7 @@ DOM 트리가 구축되는 동안 브라우저는 렌더 트리를 구축한다.
 
 웹킷 렌더러의 기본 클래스인 RederObject 클래스는 다음과 같이 정의되어 있다.
 
-```c++
+```cpp
 class RenderObject{
   virtual void layout();
   virtual void paint(PaintInfo);
@@ -498,7 +474,7 @@ class RenderObject{
 
 박스 유형은 노드와 관련된 `display` 스타일 속성의 영향을 받는다. 아래 웹킷 코드는 display 속성에 따라 DOM 노드에 어떤 유형의 렌더러를 만들어야 하는지 결정하는 코드이다.
 
-```c++
+```cpp
 RenderObject* RenderObject::createObject(Node* node, RenderStyle* style)
 {
   Document* doc = node->document();
@@ -538,9 +514,7 @@ RenderObject* RenderObject::createObject(Node* node, RenderStyle* style)
 
 어떤 렌더 객체는 DOM 노드에 대응하지만 트리의 동일한 위치에 있지 않다. float 처리된 요소 또는 position 속성 값이 absolute로 처리된 요소는 흐름에서 벗어나 트리의 다른 곳에 배치된 상태로 형상이 그려진다. 대신 자리 표시자가 원래 있어야 할 곳에 배치된다.
 
-<p align="center">
-  <img src="./images/render-tree-and-the-corresponding-dom-tree.png"/>
-</p>
+![](./images/render-tree-and-the-corresponding-dom-tree.png)
 
 ### 트리를 구축하는 과정
 
@@ -590,9 +564,7 @@ html 태그와 body 태그를 처리함으로써 렌더 트리 루트를 구성�
 
 파이어폭스는 스타일 계산을 쉽게 처리하기 위해 `규칙 트리` 와 `스타일 문맥 트리` 라고 하는 두 개의 트리를 더 가지고 있다. 웹킷도 스타일 객체를 가지고 있지만 스타일 문맥 트리처럼 저장되지 않고 오직 DOM 노드로 관련 스타일을 처리한다.
 
-<p align="center">
-  <img src="./images/firefox-style-context-tree.png"/>
-</p>
+![](./images/firefox-style-context-tree.png)
 
 스타일 문맥에는 최종 값이 저장되어 있다. 값은 올바른 순서 안에서 부합하는 규칙을 적용하고 논리로부터 구체적인 값으로 변환함으로써 계산된다. 예를 들어 논리적인 값이 화면의 백분율(%) 이라면 이 값은 계산에 의해 절대적인 단위(px)로 변환된다. 이런 규칙 트리 아이디어는 정말 현명하다. 노드 사이에서 이 값을 공유함으로써 그것들을 다시 계산하는 일을 방지하기 때문이다.
 
@@ -600,9 +572,7 @@ html 태그와 body 태그를 처리함으로써 렌더 트리 루트를 구성�
 
 트리 경로를 어휘 목록 속에 있는 단어라고 생각하고 이미 규칙 트리를 계산했다고 가정해 보자.
 
-<p align="center">
-  <img src="./images/tree.png"/>
-</p>
+![](./images/tree.png)
 
 내용 트리에서 또 다른 요소에 부합하는 규칙이 필요하다고 가정하고 부합하는 규칙이 순서에 따라 B - E - I 라고 치자. 브라우저는 이미 A - B - E - I - L 경로를 계산했기 때문에 트리 안에 이 경로가 있고 할 일이 줄었다.
 
@@ -653,15 +623,11 @@ div span { margin-bottom: 4px; }
 
 결과적으로 규칙 트리는 아래처럼 보일 것이다. 노드는 노드 이름과 노드가 가리키는 규칙의 번호로 표시되어 있다.
 
-<p align="center">
-  <img src="./images/rule-tree.png"/>
-</p>
+![](./images/rule-tree.png)
 
 문맥 트리는 아래처럼 보일 것이다. 노드는 노드 이름과 노드가 가리키는 규칙 노드로 표시되어 있다.
 
-<p align="center">
-  <img src="./images/context-tree.png"/>
-</p>
+![](./images/context-tree.png)
 
 HTML을 파싱하여 두 번째 \<div\> 태그인 \<div class="err" id="div2"\>에 이르렀다고 가정하자. 이 노드에 필요한 스타일 문맥을 생성하고 스타일 구조체를 채워야 한다.
 
@@ -671,7 +637,7 @@ HTML을 파싱하여 두 번째 \<div\> 태그인 \<div class="err" id="div2"\>�
 
 색상 구조체 정의에는 저장된 구조체를 사용할 수 없다. 색상은 이미 하나의 속성 값을 가지고 있기 때문에 다른 값을 채우기 위해 규칙 트리 상단으로 거슬러 올라갈 필요가 없다. 최종 값을 계산하고 계산된 값(문자열에서 RGB 등으로 변환된)을 이 노드에 저장할 것이다.
 
-두 번째 <span> 요소는 보다 수월하게 진행된다. 맞는 규칙을 찾다 보면 이전 span과 같이 규칙 트리의 G:3를 가리킨다는 결론에 이르는데 동일한 노드를 가리키는 형제가 있기 때문에 전체 스타일 문맥을 공유하고 이전 span의 문맥을 취하면 된다.
+두 번째 \<span\> 요소는 보다 수월하게 진행된다. 맞는 규칙을 찾다 보면 이전 span과 같이 규칙 트리의 G:3를 가리킨다는 결론에 이르는데 동일한 노드를 가리키는 형제가 있기 때문에 전체 스타일 문맥을 공유하고 이전 span의 문맥을 취하면 된다.
 
 부모로부터 상속된 규칙을 포함하고 있는 구조체의 저장은 문맥 트리에서 처리된다. 색상 속성은 실제로 상속된다. 그러나 파이어폭스는 재설정으로 처리해서 규칙 트리에 저장한다.
 
@@ -796,7 +762,7 @@ style=""         /* a=1 b=0 c=0 d=0 -> specificity = 1,0,0,0 */
 
 맞는 규칙을 찾으면 다단계 규칙에 따라 정렬된다. 웹킷은 목록이 적으면 버블 정렬을 사용하고 목록이 많을 때는 병합 정렬을 사용한다. 웹킷은 규칙에 ">" 연산자를 덮어쓰는 방식으로 정렬을 실행한다.
 
-```c++
+```cpp
 static bool operator >(CSSRuleData& r1, CSSRuleData& r2)
 {
   int spec1 = r1.selector()->specificity();
@@ -840,9 +806,7 @@ HTML은 흐름 기반의 배치 모델을 사용하는데 이것은 보통 단�
 
 점증 배치는 렌더러가 더티일 때 비동기적으로 일어난다. 예를 들면 네트워크로부터 추가 내용을 받아서 DOM 트리에 더해진 다음 새로운 렌더러가 렌더 트리에 붙을 때이다.
 
-<p align="center">
-  <img src="./images/incremental-layout.png"/>
-</p>
+![](./images/incremental-layout.png)
 
 ### 비동기 배치와 동기 배치
 
@@ -945,7 +909,7 @@ CSS2는 그리기 과정의 순서를 정의했다. 이것은 실제로 요소�
 
 브라우저의 주요 스레드는 이벤트 순환으로 처리 과정을 유지하기 위해 무한 순환된다. 배치와 그리기 같은 이벤트를 위해 대기하고 이벤트를 처리한다. 아래는 주요 이벤트 순환을 위한 파이어폭스 코드이다.
 
-```c++
+```cpp
 while (!mExiting)
   NS_ProcessNextEvent(thread);
 ```
@@ -964,9 +928,7 @@ CSS 박스 모델은 문서 트리에 있는 요소를 위해 생성되고 시�
 
 각 박스는 콘텐츠 영역(문자, 이미지 등)과 선택적인 패딩과 테두리, 여백이 있다.
 
-<p align="center">
-  <img src="./images/css2-box-model.png"/>
-</p>
+![](./images/css2-box-model.png)
 
 각 노드는 이런 상자를 0에서 n개 생성한다.
 
@@ -1011,27 +973,19 @@ position 속성을 정의하지 않으면 static이 기본 값이 되며 일반�
 
 블록 박스: 브라우저 창에서 사각형 블록을 형성한다.
 
-<p align="center">
-  <img src="./images/block-box.png"/>
-</p>
+![](./images/block-box.png)
 
 인라인 박스: 블록이 되지 않고 블록 내부에 포함된다.
 
-<p align="center">
-  <img src="./images/inline-boxes.png"/>
-</p>
+![](./images/inline-boxes.png)
 
 블록은 다른 블록 아래 수직으로 배치되고 인라인은 수평으로 배치된다.
 
-<p align="center">
-  <img src="./images/block-and-inline-formatting.png"/>
-</p>
+![](./images/block-and-inline-formatting.png)
 
 인라인 박스는 `라인` 또는 `라인 박스` 안쪽에 놓인다. 라인은 적어도 가장 큰 박스만큼 크지만 `baseline` 정렬일 때 더 커질 수 있다. 이것은 요소의 하단이 다른 상자의 하단이 아닌 곳에 배치된 경우를 의미한다. 포함하는 너비가 충분하지 않으면 인라인은 몇 줄의 라인으로 배치되는데 이것은 보통 문단 안에서 발생한다.
 
-<p align="center">
-  <img src="./images/lines.png"/>
-</p>
+![](./images/lines.png)
 
 ### 위치 잡기
 
@@ -1039,9 +993,7 @@ position 속성을 정의하지 않으면 static이 기본 값이 되며 일반�
 
 상대적인 위치 잡기는 일반적인 흐름에 따라 위치를 결정한 다음 필요한 만큼 이동한다.
 
-<p align="center">
-  <img src="./images/relative-positioning.png"/>
-</p>
+![](./images/relative-positioning.png)
 
 #### 플로트
 
@@ -1054,17 +1006,13 @@ position 속성을 정의하지 않으면 static이 기본 값이 되며 일반�
 </p>
 ```
 
-<p align="center">
-  <img src="./images/float.png"/>
-</p>
+![](./images/float.png)
 
 #### 절대적인(absolute) 위치와 고정된(fixed) 위치
 
 절대와 고정 배치는 일반적인 흐름과 무관하게 결정되고, 일반적인 흐름에 관여하지 않으며, 면적은 부모에 따라 상대적이다. 고정인 경우 뷰포트로부터 위치를 결정한다.
 
-<p align="center">
-  <img src="./images/fixed-positioning.png"/>
-</p>
+![](./images/fixed-positioning.png)
 
 > 고정된 박스는 문서가 스크롤되어도 따라 움직이지 않는다.
 
@@ -1087,9 +1035,7 @@ position 속성을 정의하지 않으면 static이 기본 값이 되며 일반�
 </p>
 ```
 
-<p align="center">
-  <img src="./images/fixed-positioning-example.png"/>
-</p>
+![](./images/fixed-positioning-example.png)
 
 붉은색 박스가 초록색 박스보다 마크업에서 먼저 나오기 때문에 일반적인 흐름이라면 먼저 그려져야 하지만 z-index 속성이 높기 때문에 더 앞쪽에 표시된다.
 
