@@ -215,7 +215,7 @@ beforeunload 이벤트 핸들러는 경우에 따라 실행되지 않을 수도 
 
 사용자가 링크를 클릭하거나 클라이언트 사이드 JavaScript에서 `window.location = "https://newsite.com"` 코드를 실행하는 것과 같이 렌더러 프로세스에서 내비게이션이 시작되면 렌더러 프로세스는 먼저 beforeunload 이벤트 핸들러를 확인한다. 이후에는 브라우저 프로세스가 내비게이션을 시작했을 때와 동일한 과정을 거친다. 유일한 차이점은 내비게이션 요청이 렌더러 프로세스에서 시작되어 브라우저 프로세스로 넘어간다는 점이다.
 
-현재 렌더링된 사이트와 다른 사이트로 이동하는 새로운 내비게이션이 발생하면 별도의 렌더러 프로세스가 새로운 내비게이션을 처리한다. 현재 렌더링된 사이트를 처리한 렌더러 프로세는 unload와 같은 이벤트를 처리하기 위해 유지된다. 더 자세한 내용은 [Page Lifecycle API](https://developers.google.com/web/updates/2018/07/page-lifecycle-api)(웹 페이지 라이프사이클 API)에서 [Overview of Page Lifecycle states and events](https://developers.google.com/web/updates/2018/07/page-lifecycle-api#overview_of_page_lifecycle_states_and_events)(웹 페이지 라이프사이클의 상태와 이벤트 개요)를 참고한다. 이벤트를 어떻게 후킹하는지도 알 수 있다.
+현재 렌더링된 사이트와 다른 사이트로 이동하는 새로운 내비게이션이 발생하면 별도의 렌더러 프로세스가 새로운 내비게이션을 처리한다. 현재 렌더링된 사이트를 처리한 렌더러 프로세는 unload와 같은 이벤트를 처리하기 위해 유지된다. 더 자세한 내용은 [Page Lifecycle API(웹 페이지 라이프사이클 API)](https://developers.google.com/web/updates/2018/07/page-lifecycle-api)에서 [Overview of Page Lifecycle states and events(웹 페이지 라이프사이클의 상태와 이벤트 개요)](https://developers.google.com/web/updates/2018/07/page-lifecycle-api#overview_of_page_lifecycle_states_and_events)를 참고한다. 이벤트를 어떻게 후킹하는지도 알 수 있다.
 
 ![](./images/unload.png)
 
@@ -236,6 +236,44 @@ beforeunload 이벤트 핸들러는 경우에 따라 실행되지 않을 수도 
 브라우저 프로세스와 렌더러 프로세스 사이를 왕복해야 하는 상황에서 서비스 워커가 결국 네트워크에서 데이터를 요청하기로 하면 지연이 발생하게 됨을 알 수 있다. [내비게이션 프리로드](https://developers.google.com/web/updates/2017/02/navigation-preload)는 서비스 워커의 시작과 병렬로 리소스를 로딩해 내비게이션 과정의 속도를 높이는 메커니즘이다. 이 요청은 헤더에 표시되어 서버가 이러한 요청에 대해 다른 콘텐츠를 보낼 수 있게 한다. 예를 들어 전체 문서를 보내지 않고 업데이트된 데이터만만 보낼 수 있다.
 
 ![](./images/navpreload.png)
+
+## 렌더러 프로세스의 내부 동작
+
+렌더러 프로세스는 여러 측면에서 웹 페이지의 성능에 영향을 끼친다.
+
+### 렌더러 프로세스는 웹 콘텐츠를 처리한다
+
+렌더러 프로세스는 탭 내부에서 발생하는 모든 작업을 담당한다. 렌더러 프로세스의 메인 스레드가 브라우저로 전송된 대부분의 코드를 처리한다. 간혹 웹 워커나 서비스 워커를 사용하는 경우에는 워커 스레드가 JavaScript 코드의 일부를 처리한다. 웹 페이지를 효율적이고 부드럽게 렌더링하기 위해 별도의 컴포지터 스레드와 래스터 스레드가 렌더러 프로세스에서 실행된다.
+
+렌더러 프로세스의 주요 역할은 HTML과 CSS, JavaScript를 사용자와 상호작용을 할 수 있는 웹 페이지로 변환하는 것이다.
+
+![](./images/renderer.png)
+
+### 파싱
+
+#### DOM 구축
+
+페이지를 이동하는 내비게이션 실행 메시지를 렌더러 프로세스가 받고 HTML 데이터를 수신하기 시작하면 렌더러 프로세스의 메인 스레드는 문자열(HTML)을 파싱해서 DOM(document object model)으로 변환하기 시작한다.
+
+DOM은 브라우저가 내부적으로 웹 페이지를 표현하는 방법일 뿐만 아니라 웹 개발자가 JavaScript를 통해 상호작용을 할 수 있는 데이터 구조이자 API이다.
+
+HTML 문서를 DOM으로 파싱하는 방법은 [HTML 표준](https://html.spec.whatwg.org/)에 정의되어 있다. 브라우저에서 HTML 문서를 열었을 때 오류를 반환받은 적이 없을 것이다. 오류를 우아하게 처리하도록 HTML 명세가 설계됐기 때문이다.
+
+#### 하위 리소스(subresource) 로딩
+
+웹 사이트는 일반적으로 이미지, CSS, JavaScript와 같은 외부 리소스를 사용한다. 이러한 파일은 네트워크나 캐시에서 로딩해야 한다. DOM을 구축하기 위해 파싱하는 동안 이런 리소스를 만날 때마다 메인 스레드가 하나하나 요청할 수도 있을 것이다. 하지만 속도를 높이기 위해 `프리로드(Preload) 스캐너` 가 동시에 실행된다. HTML 문서에 `<img>` 또는 `<link>` 와 같은 태그가 있으면 프리로드 스캐너는 HTML 파서가 생성한 토큰을 확인하고 브라우저 프로세스의 네트워크 스레드에 요청을 보낸다.
+
+![](./images/dom.png)
+
+#### 자바 스크립트가 파싱을 막을 수 있다
+
+`<script>` 태그를 만나면 HTML 파서는 HTML 문서의 파싱을 일시 중지한 다음 JavaScript 코드를 로딩하고 파싱해 실행해야 한다. 왜냐하면 JavaScript는 DOM 구조 전체를 바꿀 수 있는 document.write() 메서드와 같은 것을 사용해 문서의 모양을 변경할 수 있기 때문이다. (HTML 명세의 [Overview of the parsing model(파싱 모델 개요)](https://html.spec.whatwg.org/multipage/parsing.html#overview-of-the-parsing-model)에 있는 다이어그램이 이 상황을 잘 표현하고 있다). HTML 파싱을 재개하기 전에 HTML 파서는 JavaScript의 실행이 끝나기를 기다려야 한다. JavaScript를 실행할 때 어떤 일이 발생하는지 궁금하다면 [JavaScript engine fundamentals: Shapes and Inline Caches(JavaScirpt 엔진의 기본: 형태와 인라인 캐시)](https://mathiasbynens.be/notes/shapes-ics)글의 영상과 내용을 참고한다.
+
+### 리소스를 어떻게 로딩하길 원하는지 브라우저에 힌트를 주는 방법
+
+웹 개발자가 브라우저에 리소스 로딩에 대한 힌트를 보내는 방법에는 여러 가지가 있다. JavaScript에서 document.write() 메서드를 사용하지 않는다면 `<script>` 태그에 async 속성이나 defer 속성을 추가할 수 있다. 이 속성이 있으면 브라우저가 JavaScript 코드를 비동기적으로 로딩하고 실행하면서 HTML 파싱을 막지 않는다. JavaScript 모듈을 사용할 수도 있다. `<link rel="preload">` 는 현재 내비게이션을 실행하기 위해 리소스가 반드시 필요하다는 것을 브라우저에 알려서 리소스를 가능한 한 빨리 다운로드하려는 경우에 사용할 수 있다. 브라우저에 힌트를 주는 방법에 관해 더 알고 싶다면 [Resource Prioritization – Getting the Browser to Help You(리소스 우선순위 지정 - 브라우저의 도움 받기)](https://web.dev/fast/#prioritize-resources)를 참고한다.
+
+### 스타일 계산
 
 # References
 
