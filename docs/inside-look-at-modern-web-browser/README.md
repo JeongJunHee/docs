@@ -191,6 +191,52 @@ Chrome이 렌더러 프로세스를 여러 개 사용한다. 가장 간단한 �
 
 ![](./images/commit.png)
 
+#### 추가 단계: 초기 로드 완료
+
+내비게이션이 실행되면 렌더러 프로세스는 계속 리소스를 로딩하고 페이지를 렌더링한다. 렌더러 프로세스가 렌더링을 `끝내면` 브라우저 프로세스로 IPC 메시지를 보낸다(이 시점은 페이지의 모든 프레임에서 onload 이벤트의 실행까지 끝낸 이후이다). 그러면 UI 스레드는 탭에서 로딩 스피너의 작동을 중지한다.
+
+`끝낸다(finish)` 라고 표현한 이유는 클라이언트 사이드의 JavaScript가 여전히 추가적인 리소스를 로드하거나 이후에 새로운 뷰를 렌더링할 수도 있기 때문이다.
+
+![](./images/loaded.png)
+
+#### 다른 사이트로 내비게이션
+
+간단한 내비게이션이 완료되었다. 그런데 사용자가 주소 표시줄에 다른 URL을 다시 입력하면 어떻게 될까? 브라우저 프로세스는 동일한 단계를 거쳐 다른 사이트로 이동을 처리한다. 하지만 그전에 현재 렌더링된 사이트에서 `beforeunload 이벤트` 를 확인해야 한다.
+
+`beforeunload 이벤트` 는 탭을 닫거나 이동하려고 할 때 `이 사이트를 떠나시겠습니까?` 라는 경고창을 만들 수 있다. JavaScript 코드를 포함해 탭 안의 모든 것은 렌더러 프로세스에 의해 처리되므로 브라우저 프로세스는 새로운 내비게이션 요청이 들어오면 현재 렌더러 프로세스를 확인해야 한다.
+
+:::warning 주의
+beforeunload 이벤트 핸들러를 아무 때나 추가하면 안 된다. 내비게이션을 시작하기 전에 이벤트 핸들러를 실행해야하기 때문에 대기 시간(latency)이 늘어난다. 이 이벤트 핸들러는 필요한 경우에만 추가해야 한다. 예를 들어 페이지에 입력한 데이터가 손실될 수 있음을 경고해야 하는 경우에 beforeunload 이벤트 핸들러를 추가한다.
+
+beforeunload 이벤트 핸들러는 경우에 따라 실행되지 않을 수도 있다. `chrome://flags/#enable-fast-unload` 설정이 활성화되었다면 beforeunload 이벤트 핸들러가 실행되지 않을 가능성이 더 높다.
+:::
+
+![](./images/beforeunload.png)
+
+사용자가 링크를 클릭하거나 클라이언트 사이드 JavaScript에서 `window.location = "https://newsite.com"` 코드를 실행하는 것과 같이 렌더러 프로세스에서 내비게이션이 시작되면 렌더러 프로세스는 먼저 beforeunload 이벤트 핸들러를 확인한다. 이후에는 브라우저 프로세스가 내비게이션을 시작했을 때와 동일한 과정을 거친다. 유일한 차이점은 내비게이션 요청이 렌더러 프로세스에서 시작되어 브라우저 프로세스로 넘어간다는 점이다.
+
+현재 렌더링된 사이트와 다른 사이트로 이동하는 새로운 내비게이션이 발생하면 별도의 렌더러 프로세스가 새로운 내비게이션을 처리한다. 현재 렌더링된 사이트를 처리한 렌더러 프로세는 unload와 같은 이벤트를 처리하기 위해 유지된다. 더 자세한 내용은 [Page Lifecycle API](https://developers.google.com/web/updates/2018/07/page-lifecycle-api)(웹 페이지 라이프사이클 API)에서 [Overview of Page Lifecycle states and events](https://developers.google.com/web/updates/2018/07/page-lifecycle-api#overview_of_page_lifecycle_states_and_events)(웹 페이지 라이프사이클의 상태와 이벤트 개요)를 참고한다. 이벤트를 어떻게 후킹하는지도 알 수 있다.
+
+![](./images/unload.png)
+
+#### 서비스 워커
+
+최근에 [서비스 워커](https://developers.google.com/web/fundamentals/primers/service-workers/)가 도입되며 내비게이션 과정에도 변화가 생겼다. 서비스 워커는 애플리케이션의 코드에 네트워크 프락시를 작성할 수 있는 수단이다. 서비스 워커를 통해 웹 개발자는 무엇을 로컬 캐시에 저장할지, 언제 네트워크에서 새 데이터를 가져올지 제어할 수 있다. 서비스 워커가 캐시에서 페이지를 로드하도록 설정되었다면 네트워크에서 데이터를 가져오도록 요청할 필요가 없다.
+
+기억해야 할 중요한 점은 서비스 워커가 렌더러 프로세스에서 실행되는 JavaScript 코드라는 점이다. 그렇다면 내비게이션 요청이 들어왔을 때 브라우저 프로세스는 사이트에 서비스 워커가 있다는 것을 어떻게 알 수 있을까?
+
+![](./images/scope_lookup.png)
+
+서비스 워커가 등록되면 서비스 워커의 범위는 참조(reference)로 유지된다(서비스 워커의 범위에 관한 더 자세한 내용은 [The Service Worker Lifecycle](https://developers.google.com/web/fundamentals/primers/service-workers/lifecycle)(서비스 워커 수명 주기)을 참고한다). 내비게이션이 발생하면 네트워크 스레드는 도메인을 등록된 서비스 워커의 범위와 비교한다. 해당 URL에 등록된 서비스 워커가 있으면 UI 스레드는 서비스 워커 코드를 실행하기 위해 렌더러 프로세스를 찾는다. 서비스 워커는 네트워크에 데이터를 요청하지 않고 캐시에서 데이터를 가져올 수 있다. 또는 네트워크에 새 리소스를 요청할 수도 있다.
+
+![](./images/serviceworker.png)
+
+#### 내비게이션 프리로드
+
+브라우저 프로세스와 렌더러 프로세스 사이를 왕복해야 하는 상황에서 서비스 워커가 결국 네트워크에서 데이터를 요청하기로 하면 지연이 발생하게 됨을 알 수 있다. [내비게이션 프리로드](https://developers.google.com/web/updates/2017/02/navigation-preload)는 서비스 워커의 시작과 병렬로 리소스를 로딩해 내비게이션 과정의 속도를 높이는 메커니즘이다. 이 요청은 헤더에 표시되어 서버가 이러한 요청에 대해 다른 콘텐츠를 보낼 수 있게 한다. 예를 들어 전체 문서를 보내지 않고 업데이트된 데이터만만 보낼 수 있다.
+
+![](./images/navpreload.png)
+
 # References
 
 [Inside look at modern web browser (part 1)](https://developers.google.com/web/updates/2018/09/inside-browser-part1)  
