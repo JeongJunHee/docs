@@ -275,6 +275,159 @@ HTML 문서를 DOM으로 파싱하는 방법은 [HTML 표준](https://html.spec.
 
 ### 스타일 계산
 
+DOM만으로는 웹 페이지의 모양을 알 수 없다. CSS로 웹 페이지 요소의 모양을 결정할 수 있기 때문이다. 메인 스레드는 CSS를 파싱하고 각 DOM 노드에 해당되는 계산된 스타일(computed style)을 확정한다. 계산된 스타일은 CSS 선택자(selector)로 구분되는 요소에 적용될 스타일에 관한 정보이다. 개발자 도구의 `computed` 패널에서 이 정보를 볼 수 있다.
+
+![](./images/computedstyle.png)
+
+CSS를 전혀 적용하지 않아도 DOM 노드에는 계산된 스타일이 적용되어 있다. `<h1>` 태그는 `<h2>` 태그보다 크게 표시되며 바깥 여백(margin)이 모든 요소에 적용된다. 브라우저에 기본 스타일 시트가 있기 때문이다. Chromium 소스 코드의 [html.css](https://source.chromium.org/chromium/chromium/src/+/master:third_party/blink/renderer/core/html/resources/html.css) 파일을 보면 Chrome의 기본 CSS가 어떤지 알 수 있다.
+
+### 레이아웃
+
+이제 렌더러 프로세스가 문서의 구조와 각 노드의 스타일을 알지만 페이지를 렌더링하기에는 충분하지 않다. 전화 통화를 하며 친구에게 그림을 설명한다고 생각해 보자. "커다란 빨간색 원이 있고, 작은 파란색 사각형이 있어."라고 말해서는 그림이 어떻게 생겼는지 친구가 정확히 알 수 없다.
+
+![](./images/tellgame.png)
+
+레이아웃은 요소의 기하학적 속성(geometry)를 찾는 과정이다. 메인 스레드는 DOM과 계산된 스타일을 훑어가며 레이아웃 트리를 만든다. 레이아웃 트리는 x, y 좌표, 박스 영역(bounding box)의 크기와 같은 정보를 가지고 있다. 레이아웃 트리는 DOM 트리와 비슷한 구조일 수 있지만 웹페이지에 보이는 요소에 관련된 정보만 가지고 있다. `display: none` 속성이 적용된 요소는 레이아웃 트리에 포함되지 않는다. (`visibility: hidden` 속성이 적용된 요소는 레이아웃 트리에 포함된다). 이와 비슷하게 `p::before{content: "Hi!" }` 속성과 같은 의사 클래스(pseudo class)의 콘텐츠는 DOM에는 포함되지 않지만 레이아웃 트리에는 포함된다.
+
+![](./images/layout.png)
+
+![](./images/layout.gif)
+
+웹 페이지의 레이아웃을 결정하는 것은 어려운 작업이다. 가장 단순하게 위에서 아래로 펼쳐지는 블록 영역 하나만 있는 웹 페이지의 레이아웃을 결정할 때에도 폰트의 크기가 얼마이고 줄 바꿈을 어디서 해야 하는지 고려해야 한다. 단락의 크기와 모양이 바뀔 수 있고, 다음 단락의 위치에 영향이 있기 때문이다.
+
+CSS는 요소를 한쪽으로 흐르게(float) 하거나, 크기를 벗어난 부분을 보이지 않게 하거나, 글이 쓰이는 방향을 변경할 수 있다. 레이아웃 단계가 엄청난 임무를 맡고 있다는 것을 알 수 있다.
+
+:::tip
+레이아웃 트리와 다음에 설명할 페인트 트리 사이에 한 가지 작업이 더 있다. 레이아웃 트리를 순회하면서 속성 트리(property tree)를 만드는 작업이다. 속성 트리는 clip, transform, opacity등의 속성 정보만 가진 트리이다. 기존에는 이런 정보를 분리하지 않고 노드마다 가지고 있었다. 그래서 특정 노드의 속성이 변경되면 해당 노드의 하위 노드에도 이 값을 다시 반영하면서 노드를 순회해야 했다. 최신 Chrome에서는 이런 속성만 별도로 관리하고 각 노드에서는 속성 트리의 노드를 참조하는 방식으로 변경되고 있다.
+:::
+
+### 페인트
+
+![](./images/drawgame.png)
+
+DOM, 스타일, 레이아웃을 가지고도 여전히 페이지를 렌더링할 수 없다. 그림을 하나 따라 그리려고 한다고 생각해 보자. 요소의 크기, 모양, 위치를 알더라도 어떤 순서로 그려야 할지 판단해야 한다.
+
+예를 들어 어떤 요소에 z-index 속성이 적용되었다면 HTML에 작성된 순서로 요소를 그리면 잘못 렌더링된 화면이 나온다.
+
+> DOM에 선언된 노드 순서와 페인트 순서는 많이 다를 수 있다.
+
+![](./images/zindex.png)
+
+페인트 단계에서 메인 스레드는 페인트 기록(paint record)을 생성하기 위해 레이아웃 트리를 순회한다. 페인트 기록은 `배경 먼저, 다음은 텍스트, 그리고 직사각형` 과 같이 페인팅 과정을 기록한 것이다.
+
+![](./images/paint.png)
+
+#### 렌더링 파이프라인을 갱신하는 데는 많은 비용이 든다
+
+![](./images/trees.gif)
+
+렌더링 파이프라인에서 파악해야 할 가장 중요한 점은 각 단계에서 이전 작업의 결과가 새 데이터를 만드는 데 사용된다는 것이다. 예를 들어 레이아웃 트리에서 변경이 생겨 문서의 일부가 영향을 받으면 페인팅 순서도 새로 생성해야 한다.
+
+요소의 애니메이션을 적용하면 브라우저는 모든 프레임 사이에서 이러한 작업을 해야 한다. 대부분의 디스플레이 장치는 화면을 초당 60번 새로 고친다(60fps). 요소의 움직임이 모든 프레임에 반영되어야 사람이 볼 때 부드럽게 느껴진다. 애니메이션에서 프레임이 누락되면 웹 페이지가 `버벅대는(janky)` 것처럼 보인다.
+
+![](./images/pagejank1.png)
+
+화면 주사율에 맞추어 렌더링 작업이 이루어져도 이 작업은 메인 스레드에서 실행되기 때문에 애플리케이션이 JavaScript를 실행하는 동안 렌더링이 막힐 수 있다.
+
+![](./images/pagejank2.png)
+
+JavaScript 작업을 작은 덩어리로 나누고 requestAnimationFrame() 메서드를 사용해 프레임마다 실행하도록 스케줄을 관리할 수 있다. 이 방법에 관한 더 자세한 내용은 [Optimize JavaScript Execution(JavaScript 실행 최적화)](https://developers.google.com/web/fundamentals/performance/rendering/optimize-javascript-execution) 글을 참고한다. 메인 스레드를 막지 않기 위해 웹 워커에서 JavaScript를 실행할 수도 있다.
+
+![](./images/raf.png)
+
+:::tip
+requestAnimationFrame() 메서드를 통해 등록한 콜백 함수는 프레임마다 실행된다. 프레임의 간격은 모니터의 주사율에 따라 다를 수 있다. 브라우저는 VSync 시그널로 프레임 간격을 파악한다. 브라우저와 VSync에 관한 더 자세한 내용은 [브라우저는 VSync를 어떻게 활용하고 있을까](https://deview.kr/2015/schedule#session/87) 발표의 자료를 참고한다.
+:::
+
+### 합성
+
+#### 페이지는 어떻게 그려질까
+
+![](./images/naive_rastering.gif)
+
+브라우저는 문서의 구조와 각 요소의 스타일, 요소의 기하학적 속성, 페인트 순서를 알고 있다. 브라우저는 이제 웹 페이지를 어떻게 그릴까? 이 정보를 화면의 픽셀로 변환하는 작업을 `래스터화(rasterizing)` 라고 한다.
+
+가장 단순한 래스터화는 아마 뷰포트 안쪽을 래스터하는 것일 것이다. 사용자가 웹 페이지를 스크롤하면 이미 래스터화한 프레임을 움직이고 나머지 빈 부분을 추가로 래스터화한다. 이 방식은 Chrome이 처음 출시되었을 때 래스터화한 방식이다. 그러나 최신 브라우저는 합성(compositing)이라는 보다 정교한 과정을 거친다.
+
+:::tip
+렌더링 파이프라인을 설명할 때 `페인트(paint)` 와 `그리기(draw)` 라는 용어가 다르게 사용되고 있다는 점에 주목해야 한다. 페인트는 페인트 작업(paint operation)을 만들어 내는 것을 의미하고, 그리기는 페인트 작업을 기반으로 비트맵이나 텍스처를 만들어 내는 것을 의미한다. 좀 더 정확히는 합성 프레임(compositing frame)을 만들어 내는 것을 지칭한다.
+:::
+
+#### 합성이란 무엇인가
+
+![](./images/composit.gif)
+
+합성은 웹 페이지의 각 부분을 레이어로 분리해 별도로 래스터화하고 컴포지터 스레드(compositor thread)라고 하는 별도의 스레드에서 웹 페이지로 합성하는 기술이다. 스크롤되었을 때 레이어는 이미 래스터화되어 있으므로 새 프레임을 합성하기만 하면 된다. 애니메이션 역시 레이어를 움직이고 합성하는 방식으로 만들 수 있다.
+
+Chrome 개발자 도구의 [Layers 패널](https://blog.logrocket.com/eliminate-content-repaints-with-the-new-layers-panel-in-chrome-e2c306d4d752/)에서 웹 사이트가 어떻게 레이어로 나뉘어 있는지 볼 수 있다.
+
+:::tip
+컴포지터 스레드를 별도로 유지하는 것이 오히려 부담이 더 클 때에는 싱글 스레드에서 합성을 실행하기도 한다. 브라우저의 UI 부분(chrome)을 담당하는 컴포지터는 싱글 스레드로 작동한다.
+:::
+
+#### 여러 레이어로 나누기
+
+어떤 요소가 어떤 레이어에 있어야 하는지 확인하기 위해 메인 스레드는 레이아웃 트리를 순회하며 레이어 트리를 만든다(이 부분은 개발자 도구의 Performance 패널에서 Update Layer Tree라고 되어 있다). 뷰포트로 미끄러져 들어오는 들어오는 슬라이드인 메뉴처럼 별도의 레이어여야 하는 웹 페이지의 어떤 부분이 별도의 레이어가 아니라면 CSS의 will-change 속성을 사용해 브라우저가 레이어를 생성하게 힌트를 줄 수 있다.
+
+![](./images/layer.png)
+
+모든 요소에 레이어를 할당하면 좋을 것 같지만 수많은 레이어를 합성하는 작업은 웹 페이지의 작은 부분을 매 프레임마다 새로 래스터화하는 작업보다 더 오래 걸릴 수 있다. 애플리케이션의 렌더링 성능은 직접 측정해 봐야 한다. 레이어 합성과 레이어 수, 성능에 관한 더 자세한 내용은 [Stick to Compositor-Only Properties and Manage Layer Count"(컴포지터 전용 속성 고수와 레이어 수 관리)](https://developers.google.com/web/fundamentals/performance/rendering/stick-to-compositor-only-properties-and-manage-layer-count) 글을 참고한다.
+
+:::tip
+레이어가 많으면 합성 비용이 높을 뿐만 아니라 레이어를 메모리에 가지고 있어야 하는 부담도 있다. Chrome은 레이어가 과도하게 많아지는 것(layer explosion)을 막기 위해 특정한 경우에는 레이어를 생성하지 않거나 합치기도 한다.
+:::
+
+#### 메인 스레드 이후 래스터화와 합성
+
+레이어 트리가 생성되고 페인트 순서가 결정되면 메인 스레드가 해당 정보를 컴포지터 스레드에 넘긴다(commit). 그러면 컴포지터 스레드는 각 레이어를 래스터화한다. 어떤 레이어는 페이지의 전체 길이만큼 클 수 있다. 그래서 컴포지터 스레드는 레이어를 타일(tile) 형태로 나눠 각 타일을 래스터 스레드로 보낸다. 래스터 스레드는 각 타일을 래스터화해 GPU 메모리에 저장한다.
+
+:::tip
+래스터화 역시 GPU의 도움을 받기 좋은 단계이다. 좀 더 자세한 내용은 [Software vs. GPU rasterization in Chromium(Chromium에서 소프트웨어 래스터화와 GPU 래스터화)](https://software.intel.com/content/www/us/en/develop/articles/software-vs-gpu-rasterization-in-chromium.html) 글을 참고한다.
+:::
+
+:::tip
+컴포지터 스레드 안에도 레이어 트리는 여러 개 있다. 메인 스레드가 넘긴(commit) 레이어 트리는 컴포지터 스레드의 펜딩 트리(pending tree)로 복사된다. 펜딩 트리는 아직 화면에 그려지지 않았지만 최신 프레임이라고 할 수 있다. 현재 화면에 그려지고 있는 이전 프레임은 액티브 트리(active tree)로 그린 프레임이다. 최신 정보로 화면을 갱신할 때는 펜딩 트리와 액티브 트리를 교체(swap)한다. 펜딩 트리와 액티브 트리에 관한 자세한 내용은 [Native One-copy Texture Uploads for Chrome OS on Intel Architecture Enabled by Default(Intel 아키텍처에서 Chrome OS의 Native One-copy Texture Uploads 설정이 기본으로 활성화된다)](https://software.intel.com/content/www/us/en/develop/articles/native-one-copy-texture-uploads-for-chrome-os-on-intel-architecture-enabled-by-default.html) 글을 참고한다.
+:::
+
+![](./images/raster.png)
+
+컴포지터 스레드는 래스터 스레드간의 우선순위를 지정할 수 있어서 뷰포트 안이나 근처의 것들이 먼저 래스터화될 수 있다. 또한 레이어는 줌인 같은 동작을 처리하기 위해 여러 해상도별로 타일 세트를 여러 벌 가지고 있다.
+
+:::tip
+타일 세트의 모든 타일이 래스터화되어 있지는 않기 때문에 최대한 구멍을 메울 수 있는 방식으로 여러 타일 세트의 타일을 조합해서 사용한다. 이렇게 해도 래스터화하지 못한 영역은 체스판(checkerboard)의 하얀색 부분처럼 빈 곳으로 둔다. 이 단계의 큰 목표 중 하나는 이 빈 곳을 줄이는 것이다([Multi-threaded Rasterization(다중 스레드로 처리하는 래스터화)](https://docs.google.com/presentation/d/1nPEC4YRz-V1m_TsGB0pK3mZMRMVvHD1JXsHGr8I3Hvc/edit#slide=id.gb5d9bbc1_10) 참고).
+
+![](./images/checkerboard.png)
+:::
+
+타일이 래스터화되면 컴포지터 스레드는 `합성 프레임` 을 생성하기 위해 타일의 정보를 모은다. 이 타일의 정보를 `드로 쿼드(draw quads)` 라고 부른다.
+
+<table>
+  <colgroup>
+    <col width="120px"/>
+    <col width="*"/>
+  </colgroup>
+  <tbody>
+    <tr>
+      <td>드로 쿼드</td>
+      <td>메모리에서 타일의 위치와 웹 페이지 합성을 고려해 타일을 웹 페이지의 어디에 그려야 하는지에 관한 정보를 가지고 있다.</td>
+    </tr>
+    <tr>
+      <td>합성 프레임</td>
+      <td>웹 페이지의 프레임을 나타내는 드로 쿼드의 모음</td>
+    </tr>
+  </tbody>
+</table>
+
+이후에 합성 프레임이 IPC를 통해 브라우저 프로세스로 전송된다. 이 시점에 브라우저 UI의 변경을 반영하려는 UI 스레드나 확장 앱을 위한 다른 렌더러 프로세스에 의해 합성 프레임이 더 추가될 수 있다. 이러한 합성 프레임은 GPU로 전송되어 화면에 표시된다. 스크롤 이벤트가 발생하면 컴포지터 스레드는 GPU로 보낼 다른 합성 프레임을 만든다.
+
+> 해상도별 타일 세트에서 타일을 선택적으로 조합하기 때문에 드로 쿼드가 조합에 필요한 정보를 기억해야 한다.
+
+> 앞으로는 합성 프레임이 브라우저 프로세스를 거치지 않고 GPU 프로세스로 바로 보내지는 형태로 변경될 예정이다.
+
+![](./images/composit.png)
+
+합성의 이점은 메인 스레드와 별개로 작동할 수 있다는 점이다. 컴포지터 스레드는 JavaScript 실행이나 스타일 계산을 기다리지 않아도 된다. 이것이 합성만 하는 애니메이션이 성능상 가장 부드럽다고 보는 이유이다([High Performance Animations(고성능 애니메이션)](https://www.html5rocks.com/en/tutorials/speed/high-performance-animations/) 참고). 레이아웃이나 페인트를 다시 계산해야 할 경우에는 메인 스레드가 관여해야 한다.
+
 # References
 
 [Inside look at modern web browser (part 1)](https://developers.google.com/web/updates/2018/09/inside-browser-part1)  
