@@ -428,6 +428,136 @@ Chrome 개발자 도구의 [Layers 패널](https://blog.logrocket.com/eliminate-
 
 합성의 이점은 메인 스레드와 별개로 작동할 수 있다는 점이다. 컴포지터 스레드는 JavaScript 실행이나 스타일 계산을 기다리지 않아도 된다. 이것이 합성만 하는 애니메이션이 성능상 가장 부드럽다고 보는 이유이다([High Performance Animations(고성능 애니메이션)](https://www.html5rocks.com/en/tutorials/speed/high-performance-animations/) 참고). 레이아웃이나 페인트를 다시 계산해야 할 경우에는 메인 스레드가 관여해야 한다.
 
+## 컴포지터가 사용자 입력을 받았을 때
+
+### 브라우저 관점에서 입력 이벤트
+
+`입력 이벤트(input event)` 라는 말을 들었을 때 입력란에서 일어나는 값 입력이나 마우스 클릭만 생각할 수 있다. 하지만 브라우저의 관점에서 입력이란 모든 사용자의 제스처를 의미한다. 마우스 휠을 스크롤하는 것도 입력 이벤트이고, 화면을 터치하거나 마우스 포인터를 화면 위에 올리는 것도 입력 이벤트이다.
+
+화면 터치와 같은 사용자 제스처가 발생했을 때 가장 먼저 제스처를 수신하는 것은 브라우저 프로세스이다. 브라우저 프로세스는 제스처가 어디에서 발생했는지만 알고 있다. 탭 내부의 콘텐츠는 렌더러 프로세스가 처리해야 한다. 그래서 브라우저 프로세스는 이벤트 유형(예: touchstart)과 이벤트가 발생한 좌표를 렌더러 프로세스에 보낸다. 렌더러 프로세스는 이벤트 대상을 찾고 해당 대상과 연결된 이벤트 리스너를 실행해 이벤트를 적절하게 처리한다.
+
+![](./images/inputevent.png)
+
+### 컴포지터는 입력 이벤트를 받는다
+
+![](./images/composit.gif)
+
+웹 페이지에 이벤트 리스너가 연결되어 있지 않으면 컴포지터 스레드는 메인 스레드와 상관없이 새로운 합성 프레임을 만들 수 있다. 하지만 이벤트 리스너가 웹 페이지에 연결되어 있다면 어떻게 될까? 이벤트를 처리해야 하는지 컴포지터 스레드가 어떻게 알 수 있나?
+
+### 고속 스크롤 불가 영역의 이해
+
+JavaScript 실행은 메인 스레드의 작업이므로 웹 페이지가 합성될 때 컴포지터 스레드는 이벤트 핸들러가 연결된 영역을 `고속 스크롤 불가 영역(non-fast scrollable region)` 이라고 표시한다. 웹 페이지의 이 영역에서 이벤트가 발생했을 때 컴포지터 스레드가 입력 이벤트를 메인 스레드로 보내야 하는지를 이 정보로 확인할 수 있다. 입력 이벤트가 고속 스크롤 불가 영역 밖에서 발생했다면 컴포지터 스레드는 메인 스레드를 기다리지 않고 새 프레임을 합성한다.
+
+![](./images/nfsr1.png)
+
+> 컴포지터 스레드가 메인 스레드를 기다리지 않을 수 있는 이유는, 컴포지터 스레드가 메인 스레드의 레이어 트리를 복사해서 별도로 가지고 있기 때문이기도 하다.
+
+#### 이벤트 핸들러를 작성할 때 주의한다
+
+웹 개발에서 이벤트를 처리하는 흔한 패턴은 이벤트 위임(event delegation)이다. 이벤트 버블링 때문에 하나의 이벤트 핸들러를 최상위 요소에 연결하고 이벤트 대상을 고려해 처리를 위임할 수 있다.
+
+```javascript
+document.body.addEventListener('touchstart', event => {
+  if (event.target === area) {
+    event.preventDefault();
+  }
+});
+```
+
+모든 요소에 대해 이벤트 핸들러를 하나만 작성하면 되므로 이런 이벤트 위임 패턴이 무척이나 편해보이는 것이 당연하다. 그러나 브라우저의 관점에서 이 코드를 보면 이제 웹 페이지의 모든 영역이 고속 스크롤 불가 영역으로 표시된다. 즉, 애플리케이션이 신경 쓰지 않는 부분에 입력이 들어와도 컴포지터 스레드는 입력 이벤트가 들어올 때마다 메인 스레드와 통신해야 하고 메인 스레드가 일을 끝내기를 기다려야 한다. 그래서 컴포지터가 스크롤을 부드럽게 할 수 없게 된다.
+
+![](./images/nfsr2.png)
+
+이런 문제를 방지하기 위해 이벤트 리스너에서 `passive: true` 옵션을 전달할 수 있다. 이 옵션은, 여전히 메인 스레드에서 이벤트를 받지만 컴포지터가 메인 스레드의 처리를 기다리지 않고 새 프레임을 만들어도 된다는 힌트를 브라우저에 주는 옵션이다.
+
+```javascript
+document.body.addEventListener('touchstart', event => {
+  if (event.target === area) {
+    event.preventDefault();
+  }
+}, { passive: true });
+```
+
+### 이벤트를 취소할 수 있는지 확인한다
+
+![](./images/scroll.png)
+
+어떤 박스 영역의 스크롤 방향을 가로로만 제한하고 싶은 경우를 생각해보자.
+
+이때 포인터 이벤트에서 `passive: true` 옵션을 사용하면 부드럽게 스크롤된다. 하지만 스크롤 방향을 제한하기 위해 `preventDefault()` 메서드를 호출하기 전에 이미 수직 스크롤이 시작되었을 수도 있다. `event.cancelable()` 메서드를 사용하면 수직 스크롤 시작 여부를 확인할 수 있다.
+
+```javascript
+document.body.addEventListener('pointermove', event => {
+  if (event.cancelable) {
+    event.preventDefault(); // block the native scroll
+    /*
+    *  do what you want the application to do here
+    */
+  }
+}, { passive: true });
+```
+
+또는 `touch-action` 과 같은 CSS 규칙을 사용해 이벤트 핸들러를 아예 안 쓸 수도 있다.
+
+```css
+#area {
+  touch-action: pan-x;
+}
+```
+
+### 이벤트 대상 찾기
+
+![](./images/hittest.png)
+
+컴포지터 스레드가 입력 이벤트를 메인 스레드로 보낼 때 가장 먼저 하는 일은 이벤트 대상을 찾는 히트 테스트(hit test)이다. 이벤트가 발생한 좌표에 무엇이 있는지 확인하기 위해 히트 테스트는 렌더링 프로세스에서 생성된 페인트 기록의 데이터를 사용한다.
+
+> 히트 테스트를 할 때 레이아웃 트리가 아닌 페인트 트리를 사용하는 이유는 clip, opacity, transform 등의 속성을 반영해야 이벤트 대상을 정확히 알 수 있기 때문인 것으로 보인다.
+
+### 메인 스레드로 이벤트를 전송하는 것을 최소화하기
+
+일반적인 디스플레이 장치는 화면을 초당 60번 새로 갱신하며 애니메이션을 화면 갱신 주기에 맞춰야 부드럽게 움직인다. 입력의 경우에는 일반적인 터치스크린 장치는 터치 이벤트를 초당 60~120회 전달한다. 마우스는 이벤트를 초당 100회 전달한다. 입력 이벤트의 전달 주기가 화면 갱신 주기보다 짧다.
+
+touchmove 이벤트처럼 연속적인 이벤트가 초당 120회씩 메인 스레드로 보내지면 화면이 갱신되는 정도보다 훨씬 많이 히트 테스트를 하거나 Javascript를 실행할 수도 있다.
+
+![](./images/rawevents.png)
+
+메인 스레드 호출이 과도해지는 것을 막기 위해 Chrome은 연속적인 이벤트(예를 들어 wheel , mousewheel , mousemove , pointermove , touchmove)를 합쳐서 바로 다음번 requestAnimationFrame() 메서드 실행 직전까지 전송(dispatch)하지 않고 기다린다.
+
+![](./images/coalescedevents.png)
+
+keydown, keyup, mouseup, mousedown, touchstart, touchend와 같은 비연속적인(discrete) 이벤트는 즉시 전달된다.
+
+### 한 프레임 안에서 합쳐진 이벤트(intra-frame events)를 얻으려면 getCoalescedEvents() 메서드를 사용한다
+
+대부분의 웹 애플리케이션에서는 이벤트를 합쳐서 처리해도 사용자가 만족스럽게 사용할 수 있다. 하지만 드로잉 앱 같은 것에서 touchmove 이벤트의 좌표를 기반으로 경로를 만들어야 할 때에는 사이사이에 경로가 누락돼서 선을 매끄럽게 그리지 못할 수 있다. 이런 경우에 포인터 이벤트의 getCoalescedEvents() 메서드를 사용하면 이벤트에 대한 정보를 얻을 수 있다.
+
+![](./images/getCoalescedEvents.png)
+
+```javascript
+window.addEventListener('pointermove', event => {
+  const events = event.getCoalescedEvents();
+  for (let event of events) {
+    const x = event.pageX;
+    const y = event.pageY;
+    // draw a line using x and y coordinates.
+  }
+});
+```
+
+### 다음 단계
+
+#### Lighthouse를 사용한다
+
+브라우저에 잘 맞춰진 코드를 작성하고 싶은데 어디서부터 시작해야 할지 모를 때에는 [Lighthouse](https://developers.google.com/web/tools/lighthouse/)를 사용한다. Lighthouse는 웹 사이트의 잘 된 점과 개선할 점을 파악한 결과를 보고서로 보여 주는 도구이다. 평가 항목에 무엇이 있는지 읽어 보는 것으로도 브라우저가 무엇을 신경 쓰는지 알 수 있을 것이다.
+
+#### 성능 측정 방법을 배운다
+
+성능 개선 방법은 사이트마다 다르기 때문에 웹 사이트의 성능을 측정하고 가장 적합한 방식을 결정할 수 있어야 한다. [Chrome 개발자 도구 개발 팀이 작성한 튜토리얼](https://developer.chrome.com/docs/devtools/speed/get-started/)은 웹 사이트의 성능을 측정하는 여러 방법을 알려 준다.
+
+#### 사이트에 기능 정책을 추가한다
+
+[기능 정책(Feature policy)](https://developers.google.com/web/updates/2018/06/feature-policy)은 웹 플랫폼의 새로운 기능으로, 프로젝트를 구축할 때 최소한의 방어책이 될 수 있다. 기능 정책을 사용하면 앱의 특정 동작을 보장하고 실수를 방지할 수 있다. 예를 들어 앱이 파싱을 차단하지 않도록 보장하려면 `동기 스크립트 정책(synchronous scripts policy)` 하에 앱을 실행할 수 있다. `sync-script: 'none'` 값을 적용하면 파싱을 막을 수 있는 JavaScript는 실행되지 않는다. 이렇게 하면 코드가 파서를 차단하는 것을 방지할 수 있고, 브라우저는 파서가 멈추는 것을 걱정할 필요가 없어진다.
+
 # References
 
 [Inside look at modern web browser (part 1)](https://developers.google.com/web/updates/2018/09/inside-browser-part1)  
