@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko-KR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>교차 출처 리소스 공유 (CORS) | Documents</title>
+    <meta name="generator" content="VuePress 1.8.2">
+    
+    <meta name="description" content="">
+    <meta name="theme-color" content="#3eaf7c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    
+    <link rel="preload" href="/documents/assets/css/0.styles.a290ccce.css" as="style"><link rel="preload" href="/documents/assets/js/app.e7b64ee9.js" as="script"><link rel="preload" href="/documents/assets/js/3.78045e8a.js" as="script"><link rel="preload" href="/documents/assets/js/10.fbe896a9.js" as="script"><link rel="prefetch" href="/documents/assets/js/2.ee39e1ff.js"><link rel="prefetch" href="/documents/assets/js/4.1d138cde.js"><link rel="prefetch" href="/documents/assets/js/5.960adb7a.js"><link rel="prefetch" href="/documents/assets/js/6.dc29a169.js"><link rel="prefetch" href="/documents/assets/js/7.2eedb07a.js"><link rel="prefetch" href="/documents/assets/js/8.6a86e299.js"><link rel="prefetch" href="/documents/assets/js/9.f9f311e6.js">
+    <link rel="stylesheet" href="/documents/assets/css/0.styles.a290ccce.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/documents/" class="home-link router-link-active"><!----> <span class="site-name">Documents</span></a> <div class="links"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <!----></div></header> <div class="sidebar-mask"></div> <aside class="sidebar"><!---->  <ul class="sidebar-links"><li><a href="/documents/how-browsers-work/" class="sidebar-link">브라우저는 어떻게 동작하는가?</a></li><li><a href="/documents/inside-look-at-modern-web-browser/" class="sidebar-link">최신 브라우저의 내부 살펴보기</a></li><li><a href="/documents/cors/" aria-current="page" class="active sidebar-link">교차 출처 리소스 공유 (CORS)</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/documents/cors/#접근-제어-시나리오" class="sidebar-link">접근 제어 시나리오</a></li><li class="sidebar-sub-header"><a href="/documents/cors/#http-응답-헤더" class="sidebar-link">HTTP 응답 헤더</a></li><li class="sidebar-sub-header"><a href="/documents/cors/#http-요청-헤더" class="sidebar-link">HTTP 요청 헤더</a></li><li class="sidebar-sub-header"><a href="/documents/cors/#references" class="sidebar-link">References</a></li></ul></li></ul> </aside> <main class="page"> <div class="theme-default-content content__default"><h1 id="교차-출처-리소스-공유-cors"><a href="#교차-출처-리소스-공유-cors" class="header-anchor">#</a> 교차 출처 리소스 공유 (CORS)</h1> <p><code>교차 출처 리소스 공유(Cross-Origin Resource Sharing, CORS)</code> 는 추가 HTTP 헤더를 사용하여, 한 출처에서 실행중인 웹 애플리케이션이 다른 출처의 선택한 자원에 접근할 수 있는 권한을 부여하도록 브라우저에 알려주는 체제이다. 웹 애플리케이션은 리소스가 자신의 출처(도메인, 프로토콜, 포트)와 다를 때 교차 출처 HTTP 요청을 실행한다.</p> <p>보안 상의 이유로, 브라우저는 스크립트에서 시작한 교차 출처 HTTP 요청을 제한한다.</p> <p>CORS 체제는 브라우저와 서버 간의 안전한 교차 출처 요청 및 데이터 전송을 지원한다. 최신 브라우저는 <code>XMLHttpRequest</code> 또는 <code>Fetch</code> 와 같은 API에서 CORS를 사용하여 교차 출처 HTTP 요청의 위험을 완화한다.</p> <p><code>교차 출처 공유 표준</code> 은 다음과 같은 경우에 사이트간 HTTP 요청을 허용한다.</p> <ul><li><code>XMLHttpRequest</code> 와 <code>Fetch API</code> 호출</li> <li>웹 폰트(CSS 내 <code>@font-face</code> 에서 교차 도메인 폰트 사용 시)</li> <li>WebGL 텍스쳐</li> <li><code>drawImage()</code> 를 사용해 캔버스에 그린 이미지/비디오 프레임</li> <li>이미지로부터 추출하는 CSS Shapes</li></ul> <p><code>교차 출처 공유 표준</code> 은 웹 브라우저에서 해당 정보를 읽는 것이 허용된 출처를 서버에서 설명할 수 있는 새로운 <code>HTTP 헤더</code> 를 추가함으로써 동작한다. 추가적으로, 서버 데이터에 <code>Side Effect</code> 를 일으킬 수 있는 HTTP 요청 메서드 (<code>GET</code> 을 제외한 <code>HTTP 메서드</code>)에 대해, CORS 명세는 브라우저가 요청을 <code>OPTIONS</code> 메서드로 <code>Preflight (사전 전달)</code> 하여 지원하는 메서드를 요청하고, 서버의 <code>허가</code> 가 떨어지면 실제 요청을 보내도록 요구하고 있다. 또한 서버는 클라이언트에게 요청에 <code>인증정보 (쿠기, HTTP 인증)</code> 를 함께 보내야 한다고 알려줄 수도 있다.</p> <p>CORS 실패는 오류의 원인이지만, 보안상의 이유로 JavaScript에서는 오류의 상세 정보에 접근할 수 없으며, 알 수 있는 것은 오류가 발생했다는 사실 뿐이다. 정확히 어떤 것이 실패했는지 알아내려면 브라우저의 콘솔을 봐야 한다.</p> <h2 id="접근-제어-시나리오"><a href="#접근-제어-시나리오" class="header-anchor">#</a> 접근 제어 시나리오</h2> <h3 id="단순-요청-simple-request"><a href="#단순-요청-simple-request" class="header-anchor">#</a> 단순 요청 (Simple Request)</h3> <p>일부 요청은 <code>CORS Preflight</code> 를 트리거하지 않는다. <code>Simple Request</code> 는 다음 조건을 모두 충족하는 요청이다.</p> <ul><li>다음 중 하나의 메서드
+<ul><li><code>GET</code></li> <li><code>HEAD</code></li> <li><code>POST</code></li></ul></li> <li>유저 에이전트가 자동으로 설정 한 헤더 (ex) Connection, User-Agent (en-US), Fetch 명세에서 &quot;forbidden header name&quot; 으로 정의한 헤더)외에, 수동으로 설정할 수 있는 헤더는 오직 Fetch 명세에서 &quot;CORS-safelisted request-header&quot;로 정의한 헤더 뿐이다.
+<ul><li><code>Accept</code></li> <li><code>Accept-Language</code></li> <li><code>Content-Language</code></li> <li><code>Content-Type</code> (<code>Content-Type</code> 헤더는 다음의 값들만 허용된다.)
+<ul><li><code>application/x-www-form-urlencoded</code></li> <li><code>multipart/form-data</code></li> <li><code>text-plain</code></li></ul></li></ul></li> <li>요청에 사용된 <code>XMLHttpRequestUpload</code> 객체에는 이벤트 리스너가 등록되어 있지 않다. 이들은 <code>XMLHttpRequest.upload</code> 프로퍼티를 사용하여 접근한다.</li> <li>요청에 <code>ReadableStream</code> 객체가 사용되지 않는다.</li></ul> <h4 id="example"><a href="#example" class="header-anchor">#</a> Example</h4> <p><code>https://foo.example</code> 의 웹 컨텐츠가 <code>https://bar.other</code> 도메인의 컨텐츠를 호출하길 원하는 경우, 아래와 같은 코드가 될 수 있다.</p> <div class="language-javascript line-numbers-mode"><pre class="language-javascript"><code><span class="token keyword">const</span> xhr <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">XMLHttpRequest</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> url <span class="token operator">=</span> <span class="token string">'https://bar.other/resources/public-data/'</span><span class="token punctuation">;</span>
+
+xhr<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span><span class="token string">'GET'</span><span class="token punctuation">,</span> url<span class="token punctuation">)</span><span class="token punctuation">;</span>
+xhr<span class="token punctuation">.</span>onreadystatechange <span class="token operator">=</span> someHandler<span class="token punctuation">;</span>
+xhr<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br></div></div><p>클라이언트와 서버간에 간단한 통신을 하고, CORS 헤더를 사용하여 권한을 처리한다.</p> <p>이 경우 브라우저가 서버로 전송하는 내용을 살펴보고, 서버의 응답을 확인한다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>GET /resources/public-data/ HTTP/1.1
+Host: bar.other
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:71.0) Gecko/20100101 Firefox/71.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Connection: keep-alive
+Origin: https://foo.example
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br></div></div><p>요청 헤더의 <code>Origin</code> 을 보면, <code>https://foo.example</code> 로부터 요청이 왔다는 것을 알 수 있다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>HTTP/1.1 200 OK
+Date: Mon, 01 Dec 2008 00:23:53 GMT
+Server: Apache/2
+Access-Control-Allow-Origin: *
+Keep-Alive: timeout=2, max=100
+Connection: Keep-Alive
+Transfer-Encoding: chunked
+Content-Type: application/xml
+
+[...XML Data...]
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br></div></div><p>서버는 이에 대한 응답으로 <code>Access-Control-Allow-Origin</code> 헤더를 다시 전송한다. 가장 간단한 접근 제어 프로토콜은 <code>Origin</code> 헤더와 <code>Access-Control-Allow-Origin</code> 을 사용하는 것이다. 이 경우 서버는 <code>Access-Control-Allow-Origin: *</code> 으로 응답해야 하며, 이는 <code>모든</code> 도메인에서 접근할 수 있음을 의미한다.</p> <h3 id="프리플라이트-요청"><a href="#프리플라이트-요청" class="header-anchor">#</a> 프리플라이트 요청</h3> <p><code>Preflighted request</code> 는 먼저 <code>OPTIONS</code> 메서드를 통해 다른 도메인의 리소스로 HTTP 요청을 보내 실제 요청이 전송하기에 안전한지 확인한다. <code>Cross-site</code> 요청은 유저 데이터에 영향을 줄 수 있기 때문에 이와 같이 미리 전송(Preflighted)한다.</p> <h4 id="example-2"><a href="#example-2" class="header-anchor">#</a> Example</h4> <div class="language-javascript line-numbers-mode"><pre class="language-javascript"><code><span class="token keyword">const</span> xhr <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">XMLHttpRequest</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+xhr<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span><span class="token string">'POST'</span><span class="token punctuation">,</span> <span class="token string">'https://bar.other/resources/post-here/'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+xhr<span class="token punctuation">.</span><span class="token function">setRequestHeader</span><span class="token punctuation">(</span><span class="token string">'Ping-Other'</span><span class="token punctuation">,</span> <span class="token string">'pingpong'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+xhr<span class="token punctuation">.</span><span class="token function">setRequestHeader</span><span class="token punctuation">(</span><span class="token string">'Content-Type'</span><span class="token punctuation">,</span> <span class="token string">'application/xml'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+xhr<span class="token punctuation">.</span>onreadystatechange <span class="token operator">=</span> handler<span class="token punctuation">;</span>
+xhr<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token string">'&lt;person&gt;&lt;name&gt;Arun&lt;/name&gt;&lt;/person&gt;'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br></div></div><p>Content-Type이 <code>application/xml</code> 이고, 사용자 정의 헤더 <code>Ping-Other</code> 가 설정되었기 때문에 이 요청은 Preflighted 처리된다.</p> <p>첫 번째 통신은 preflight request/response 이다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>OPTIONS /resources/post-here/ HTTP/1.1
+Host: bar.other
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:71.0) Gecko/20100101 Firefox/71.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Connection: keep-alive
+Origin: http://foo.example
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: X-PINGOTHER, Content-Type
+
+
+HTTP/1.1 204 No Content
+Date: Mon, 01 Dec 2008 01:15:39 GMT
+Server: Apache/2
+Access-Control-Allow-Origin: https://foo.example
+Access-Control-Allow-Methods: POST, GET, OPTIONS
+Access-Control-Allow-Headers: X-PINGOTHER, Content-Type
+Access-Control-Max-Age: 86400
+Vary: Accept-Encoding, Origin
+Keep-Alive: timeout=2, max=100
+Connection: Keep-Alive
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br></div></div><p>1 - 10 행은 <code>OPTIONS</code> 메서드를 사용한 <code>preflight request</code> 를 나타낸다. <code>OPTIONS</code> 요청과 함께 두 개의 다른 요청 헤더가 전송된다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>Access-Control-Request-Method: POST
+Access-Control-Request-Headers: X-PINGOTHER, Content-Type
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br></div></div><div class="custom-block tip"><p class="custom-block-title">OPTIONS</p> <p><code>OPTIONS</code> 는 서버에서 추가 정보를 판별하는데 사용하는 HTTP/1.1 메서드이다.
+safe 메서드이기 때문에, 리소스를 변경하는데 사용할 수 없다.</p></div> <ul><li><strong>Access-Control-Request-Method</strong> <ul><li><code>preflight request</code> 의 일부로, 실제 요청을 전송할 때 <code>POST</code> 메서드로 전송된다는 것을 알려준다.</li></ul></li> <li><strong>Access-Control-Request-Headers</strong> <ul><li>실제 요청을 전송할 때 <code>X-PINGOTHER</code> 와 <code>Content-Type</code> 사용자 정의 헤더와 함께 전송된다는 것을 서버에 알려준다.</li></ul></li></ul> <p>서버는 이러한 상황에서 요청을 수락할지 결정할 수 있다.</p> <p>13 - 22 행은 서버가 요청 메서드와 (POST) 요청 헤더를 (X-PINGOTHER) 받을 수 있음을 나타내는 응답이다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>Access-Control-Allow-Origin: https://foo.example
+Access-Control-Allow-Methods: POST, GET, OPTIONS
+Access-Control-Allow-Headers: X-PINGOTHER, Content-Type
+Access-Control-Max-Age: 86400
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><ul><li><p><strong>Access-Control-Allow-Methods</strong></p> <ul><li>서버는 <code>Access-Control-Allow-Methods</code> 로 응답하고 <code>POST</code> 와 <code>GET</code> 이 리소스를 쿼리하는데 유용한 메서드라고 가르쳐준다.</li></ul> <blockquote><p>이 헤더는 <code>Allow</code> 응답 헤더와 유사하지만, 접근 제어 컨텍스트 내에서 엄격하게 사용된다.</p></blockquote> <div class="custom-block tip"><p class="custom-block-title">Allow</p> <p><code>Allow</code> 헤더는 리소스가 지원하는 메소드 집합을 나열한다.</p> <p><a href="https://developer.mozilla.org/ko/docs/Web/HTTP/Headers/Allow" target="_blank" rel="noopener noreferrer">Allow - MDN<span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></p></div></li> <li><p><strong>Access-Control-Allow-Headers</strong></p> <ul><li><code>Access-Control-Allow-Headers</code> 의 값을 <code>X-PINGOTHER, Content-Type</code> 으로 전송하여 실제 요청에 사용할 수 있음을 확인한다.</li></ul></li> <li><p><strong>Access-Control-Max-Age</strong></p> <ul><li>다른 <code>preflight request</code> 를 보내지 않고, <code>preflight request</code> 에 대한 응답을 캐시할 수 있는 시간(초)을 제공한다.</li> <li>각 브라우저의 최대 캐싱 시간은 <code>Access-Control-Max-Age</code> 가 클수록 우선순위가 높다.</li></ul></li></ul> <p>preflight request가 완료되면 실제 요청을 전송한다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>POST /resources/post-here/ HTTP/1.1
+Host: bar.other
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:71.0) Gecko/20100101 Firefox/71.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Connection: keep-alive
+X-PINGOTHER: pingpong
+Content-Type: text/xml; charset=UTF-8
+Referer: https://foo.example/examples/preflightInvocation.html
+Content-Length: 55
+Origin: https://foo.example
+Pragma: no-cache
+Cache-Control: no-cache
+
+&lt;person&gt;&lt;name&gt;Arun&lt;/name&gt;&lt;/person&gt;
+
+
+HTTP/1.1 200 OK
+Date: Mon, 01 Dec 2008 01:15:40 GMT
+Server: Apache/2
+Access-Control-Allow-Origin: https://foo.example
+Vary: Accept-Encoding, Origin
+Content-Encoding: gzip
+Content-Length: 235
+Keep-Alive: timeout=2, max=99
+Connection: Keep-Alive
+Content-Type: text/plain
+
+[Some GZIP'd payload]
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br></div></div> <h3 id="인증정보를-포함한-요청"><a href="#인증정보를-포함한-요청" class="header-anchor">#</a> 인증정보를 포함한 요청</h3> <p><code>credentialed requests</code> 는 <code>XMLHttpRequest</code> 혹은 <code>Fetch</code> 를 사용할 때 CORS에 의해 드러나는 가장 흥미로운 기능이다. <code>credentialed requests</code> 는 HTTP cookies 와 HTTP Authentication 정보를 인식한다. 기본적으로 cross-site <code>XMLHttpRequest</code> 나 <code>Fetch</code> 호출에서 브라우저는 자격 증명을 보내지 않는다. <code>XMLHttpRequest</code> 객체나 <code>Request</code> 생성자가 호출될 때 특정 플래그를 설정해야 한다.</p> <h4 id="example-3"><a href="#example-3" class="header-anchor">#</a> Example</h4> <p><code>http://foo.example</code> 에서 불러온 컨텐츠는 쿠키를 설정하는 <code>http://bar.other</code> 리소스에 simple GET request를 작성한다.</p> <div class="language-javascript line-numbers-mode"><pre class="language-javascript"><code><span class="token keyword">const</span> invocation <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">XMLHttpRequest</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> url <span class="token operator">=</span> <span class="token string">'http://bar.other/resources/credentialed-content/'</span><span class="token punctuation">;</span>
+
+<span class="token keyword">function</span> <span class="token function">callOtherDomain</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>invocation<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    invocation<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span><span class="token string">'GET'</span><span class="token punctuation">,</span> url<span class="token punctuation">,</span> <span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    invocation<span class="token punctuation">.</span>withCredentials <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    invocation<span class="token punctuation">.</span>onreadystatechange <span class="token operator">=</span> handler<span class="token punctuation">;</span>
+    invocation<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br></div></div><p>7행은 쿠키와 함께 호출하기위한 <code>XMLHttpRequest</code> 의 플래그(<code>withCredentials</code>)를 보여준다. 기본적으로 호출은 쿠키 없이 이루어지며, 이것은 simple GET request 이므로 preflighted 되지 않는다. 그러나 브라우저는<code>Access-Control-Allow-Credentials: true</code> 헤더가 없는 응답을 거부한다. 따라서 호출된 웹 컨텐츠에 응답을 제공하지 않는다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>GET /resources/credentialed-content/ HTTP/1.1
+Host: bar.other
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:71.0) Gecko/20100101 Firefox/71.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Connection: keep-alive
+Referer: http://foo.example/examples/credential.html
+Origin: http://foo.example
+Cookie: pageAccess=2
+
+
+HTTP/1.1 200 OK
+Date: Mon, 01 Dec 2008 01:34:52 GMT
+Server: Apache/2
+Access-Control-Allow-Origin: https://foo.example
+Access-Control-Allow-Credentials: true
+Cache-Control: no-cache
+Pragma: no-cache
+Set-Cookie: pageAccess=3; expires=Wed, 31-Dec-2008 01:34:53 GMT
+Vary: Accept-Encoding, Origin
+Content-Encoding: gzip
+Content-Length: 106
+Keep-Alive: timeout=2, max=100
+Connection: Keep-Alive
+Content-Type: text/plain
+
+
+[text/plain payload]
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br></div></div><p>10행에는 <code>http://bar.other</code> 의 컨텐츠를 대상으로 하는 쿠키가 포함되어 있다. 그러나 17행의 <code>Access-Control-Allow-Credentials: true</code> 로 응답하지 않으면, 응답을 무시되고 웹 컨텐츠는 제공되지 않는다.</p> <h4 id="실행-전-요청-및-자격-증명"><a href="#실행-전-요청-및-자격-증명" class="header-anchor">#</a> 실행 전 요청 및 자격 증명</h4> <p>CORS 실행 전 요청에는 자격 증명이 포함되지 않아야 한다. 실행 전 요청에 대한 응답은 <code>Access-Control-Allow-Credentials: true</code> 를 지정하여 자격 증명으로 실제 요청을 수행할 수 있음을 나타내야 한다.</p> <h4 id="자격-증명-요청-및-와일드카드-credentialed-requests-and-wildcards"><a href="#자격-증명-요청-및-와일드카드-credentialed-requests-and-wildcards" class="header-anchor">#</a> 자격 증명 요청 및 와일드카드(Credentialed requests and wildcards)</h4> <p>자격 증명 요청에 응답할 때 서버는 반드시 <code>*</code> 와일드카드를 지정하는 대신 <code>Access-Control-Allow-Origin</code> 헤더 값에 출처를 지정해야 한다.</p> <p>위 예제에서 요청 헤더에 <code>Cookie</code> 헤더가 포함되어 있기 때문에 <code>Access-Control-Allow-Origin</code> 헤더의 값이 <code>*</code> 인 경우 요청이 실패한다. 위 요청은 <code>Access-Control-Allow-Origin</code> 헤더가 <code>https://foo.example</code> 이기 때문에 자격 증명 인식 컨텐츠는 웹 호출 컨텐츠로 리턴된다.</p> <p>위 예제의 <code>Set-Cookie</code> 응답 헤더는 추가 쿠키를 생성한다.</p> <h5 id="third-party-cookies"><a href="#third-party-cookies" class="header-anchor">#</a> Third-party cookies</h5> <p>CORS 응답에 설정된 쿠키에는 일반적인 <code>third-party cookie</code> 정책이 적용된다.</p> <p>위의 예제는 <code>foo.example</code> 에서 페이지를 불러오지만 20행의 쿠키는 <code>bar.other</code> 가 전송한다. 따라서 사용자의 브라우저 설정이 모든 <code>third-party cookie</code> 를 거부하도록 되어 있다면, 이 쿠키는 저장되지 않는다.</p> <h2 id="http-응답-헤더"><a href="#http-응답-헤더" class="header-anchor">#</a> HTTP 응답 헤더</h2> <p>서버가 접근 제어 요청을 위해 보내는 HTTP 응답 헤더</p> <h3 id="access-control-allow-origin"><a href="#access-control-allow-origin" class="header-anchor">#</a> Access-Control-Allow-Origin</h3> <div class="language- line-numbers-mode"><pre class="language-text"><code>Access-Control-Allow-Origin: &lt;origin&gt; | *
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br></div></div><p>단일 출처를 지정하여 브라우저가 해당 출처가 리소스에 접근하도록 허용한다.</p> <p>자격 증명이 없는 요청의 경우 <code>*</code> 와일드카드는 브라우저의 origin에 상관없이 모든 리소스에 접근하도록 허용한다.</p> <p>서버가 <code>*</code> 와일드카드 대신에 하나의 origin을 지정하는 경우, 서버는 <code>Vary</code> 응답 헤더에 <code>Origin</code> 을 포함해야 한다.</p> <div class="custom-block tip"><p class="custom-block-title">Vary</p> <p><code>Vary</code> 헤더는 캐시 된 응답을 향후 요청들에서 오리진 서버로 새로운 요청 헤더를 요청하는 대신 사용할 수 있는지 여부를 결정한다.</p> <p><a href="https://developer.mozilla.org/ko/docs/Web/HTTP/Headers/Allow" target="_blank" rel="noopener noreferrer">Vary - MDN<span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></p></div> <h3 id="access-control-expose-headers"><a href="#access-control-expose-headers" class="header-anchor">#</a> Access-Control-Expose-Headers</h3> <p>브라우저가 접근할 수 있는 헤더를 서버의 화이트리스트에 추가할 수 있다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>Access-Control-Expose-Headers: &lt;header-name&gt;[, &lt;header-name&gt;]*
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br></div></div><h3 id="access-control-max-age"><a href="#access-control-max-age" class="header-anchor">#</a> Access-Control-Max-Age</h3> <p>preflight request 요청 결과를 캐시할 수 있는 시간을 나타낸다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>Access-Control-Max-Age: &lt;delta-seconds&gt;
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br></div></div><h3 id="access-control-allow-credentials"><a href="#access-control-allow-credentials" class="header-anchor">#</a> Access-Control-Allow-Credentials</h3> <p><code>credentials</code> 플래그가 <code>ture</code> 일 때, 요청에 대한 응답을 표시할 수 있는지를 나타낸다.</p> <p>preflight request에 대한 응답의 일부로 사용하는 경우, credentials을 사용하여 실제 요청을 수행할 수 있는지를 나타낸다.</p> <p>simple GET requests는 preflighted되지 않으므로 credentials이 있는 리소스를 요청하면, 이 헤더가 리소스와 함께 반환되지 않습니다. 이 헤더가 없으면 브라우저에서 응답을 무시하고 웹 컨텐츠로 반환되지 않는다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>Access-Control-Allow-Credentials: true
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br></div></div><h3 id="access-control-allow-methods"><a href="#access-control-allow-methods" class="header-anchor">#</a> Access-Control-Allow-Methods</h3> <p>리소스에 접근할 때 허용되는 메서드를 지정한다. 이 헤더는 preflight request에 대한 응답으로 사용된다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>Access-Control-Allow-Methods: &lt;method&gt;[, &lt;method&gt;]*
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br></div></div><h3 id="access-control-allow-headers"><a href="#access-control-allow-headers" class="header-anchor">#</a> Access-Control-Allow-Headers</h3> <p><code>preflight request</code> 에 대한 응답으로 사용된다. 실제 요청시 사용할 수 있는 HTTP 헤더를 나타낸다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>Access-Control-Allow-Headers: &lt;header-name&gt;[, &lt;header-name&gt;]*
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br></div></div><h2 id="http-요청-헤더"><a href="#http-요청-헤더" class="header-anchor">#</a> HTTP 요청 헤더</h2> <p>cross-origin 공유 기능을 사용하기 위해 클라이언트가 HTTP 요청을 발행할 때 사용할 수 있는 헤더</p> <h3 id="origin"><a href="#origin" class="header-anchor">#</a> Origin</h3> <p>cross-site 접근 요청 또는 preflight request의 출처를 나타낸다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>Origin: &lt;origin&gt;
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br></div></div><p>origin은 요청이 시작된 서버를 나타내는 URI 이다. 경로 정보는 포함하지 않고, 오직 서버 이름만 포함한다.</p> <blockquote><p>origin 값은 <code>null</code> 또는 <code>URI</code> 가 올 수 있다.</p></blockquote> <h3 id="access-control-request-method"><a href="#access-control-request-method" class="header-anchor">#</a> Access-Control-Request-Method</h3> <p>실제 요청에서 어떤 HTTP 메서드를 사용할지 서버에게 알려주기 위해, preflight request 할 때에 사용된다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>Access-Control-Request-Method: &lt;method&gt;
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br></div></div><h3 id="access-control-request-headers"><a href="#access-control-request-headers" class="header-anchor">#</a> Access-Control-Request-Headers</h3> <p>실제 요청에서 어떤 HTTP 헤더를 사용할지 서버에게 알려주기 위해, preflight request 할 때에 사용된다.</p> <div class="language- line-numbers-mode"><pre class="language-text"><code>Access-Control-Request-Headers: &lt;field-name&gt;[, &lt;field-name&gt;]*
+</code></pre> <div class="line-numbers-wrapper"><span class="line-number">1</span><br></div></div><h2 id="references"><a href="#references" class="header-anchor">#</a> References</h2> <p><a href="https://developer.mozilla.org/ko/docs/Web/HTTP/CORS#origin" target="_blank" rel="noopener noreferrer">교차 출처 리소스 공유 (CORS) - MDN<span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></p></div> <footer class="page-edit"><!----> <!----></footer> <div class="page-nav"><p class="inner"><span class="prev">
+      ←
+      <a href="/documents/inside-look-at-modern-web-browser/" class="prev">
+        최신 브라우저의 내부 살펴보기
+      </a></span> <!----></p></div> </main></div><div class="global-ui"></div></div>
+    <script src="/documents/assets/js/app.e7b64ee9.js" defer></script><script src="/documents/assets/js/3.78045e8a.js" defer></script><script src="/documents/assets/js/10.fbe896a9.js" defer></script>
+  </body>
+</html>
