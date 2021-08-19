@@ -17,6 +17,9 @@ module.exports = {
       { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }
     ]
   ],
+  markdown: {
+    lineNumbers: true
+  },
   themeConfig: {
     repo: '',
     editLinks: false,
@@ -33,6 +36,10 @@ module.exports = {
       {
         title: '최신 브라우저의 내부 살펴보기',
         path: '/inside-look-at-modern-web-browser/'
+      },
+      {
+        title: '교차 출처 리소스 공유 (CORS)',
+        path: '/cors/'
       }
     ]
   },
