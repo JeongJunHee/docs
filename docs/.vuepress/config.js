@@ -39,7 +39,7 @@ module.exports = {
       },
       {
         title: '교차 출처 리소스 공유 (CORS)',
-        path: '/cors/'
+        path: '/cross-origin-resource-sharing/'
       }
     ]
   },
